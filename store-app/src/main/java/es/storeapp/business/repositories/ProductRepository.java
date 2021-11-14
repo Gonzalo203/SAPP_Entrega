@@ -10,12 +10,19 @@ import org.springframework.stereotype.Repository;
 public class ProductRepository extends AbstractRepository<Product> {
     
     private static final String FIND_BY_CATEGORY_QUERY = 
-            "SELECT p FROM Product p WHERE p.category.name = ''{0}'' ORDER BY p.{1}";
+            "SELECT p FROM Product p WHERE p.category.name = :category ORDER BY p.:orderColumn";
     
     public List<Product> findByCategory(String category, String orderColumn) {
-        Query query = entityManager.createQuery(MessageFormat.format(FIND_BY_CATEGORY_QUERY, 
-                category, orderColumn));
-        return query.getResultList();
+        try{
+            Query query = entityManager.createQuery(FIND_BY_CATEGORY_QUERY);
+            query.setParameter("category", category);
+            query.setParameter("orderColumn", orderColumn);
+            return query.getResultList();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+
     }
     
 }

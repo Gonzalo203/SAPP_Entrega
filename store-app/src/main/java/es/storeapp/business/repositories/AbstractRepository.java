@@ -18,9 +18,9 @@ public abstract class AbstractRepository<T> {
 
     protected final Logger logger;
     
-    private static final String FIND_ALL_QUERY = "SELECT t FROM {0} t";
-    private static final String FIND_ALL_ORDERED_QUERY = "SELECT t FROM {0} t ORDER BY t.{1}";
-    private static final String FIND_BY_TEXT_ATTRIBUTE_QUERY = "SELECT t FROM {0} t WHERE t.{1} = ''{2}'' ORDER BY t.{3}";
+    private static final String FIND_ALL_QUERY = "SELECT t FROM :name t";
+    private static final String FIND_ALL_ORDERED_QUERY = "SELECT t FROM :name t ORDER BY t.:orderColumn";
+    private static final String FIND_BY_TEXT_ATTRIBUTE_QUERY = "SELECT t FROM :name t WHERE t.:attribute = :value ORDER BY t.:orderColumn";
     
     private final Class<T> genericType;
 
@@ -64,20 +64,40 @@ public abstract class AbstractRepository<T> {
     }
     
     public List<T> findAll() {
-        Query query = entityManager.createQuery(MessageFormat.format(FIND_ALL_QUERY, 
-                genericType.getSimpleName()));
-        return query.getResultList();
+        try {
+            Query query = entityManager.createQuery(FIND_ALL_QUERY);
+            query.setParameter("name", genericType.getSimpleName());
+            return query.getResultList();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
     }
     
     public List<T> findAll(String orderColumn) {
-        Query query = entityManager.createQuery(MessageFormat.format(FIND_ALL_ORDERED_QUERY, 
-                genericType.getSimpleName(), orderColumn));
-        return query.getResultList();
+        try {
+            Query query = entityManager.createQuery(MessageFormat.format(FIND_ALL_ORDERED_QUERY,
+                    genericType.getSimpleName(), orderColumn));
+            query.setParameter("name", genericType.getSimpleName());
+            query.setParameter("orderColumn", orderColumn);
+            return query.getResultList();
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
     }
     
     public List<T> findByStringAttribute(String attribute, String value, String orderColumn) {
-        Query query = entityManager.createQuery(MessageFormat.format(FIND_BY_TEXT_ATTRIBUTE_QUERY, 
-                genericType.getSimpleName(), attribute, value, orderColumn));
-        return query.getResultList();
+        try {
+            Query query = entityManager.createQuery(FIND_BY_TEXT_ATTRIBUTE_QUERY);
+            query.setParameter("name", genericType.getSimpleName());
+            query.setParameter("attribute", attribute);
+            query.setParameter("value", value);
+            query.setParameter("orderColumn", orderColumn);
+            return query.getResultList();
+        } catch (Exception e){
+            logger.error(e.getMessage(), e);
+            return null;
+        }
     }
 }
